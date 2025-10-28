@@ -30,6 +30,13 @@ func Start() {
 		return
 	}
 
+	// 初始化系统用户
+	err = initialize.InitSystemUser()
+	if err != nil {
+		logger.Error("Startup failed, error in creating the system user: ", err)
+		return
+	}
+
 	// 启动Web服务引擎
 	eng := initialize.InitWebEngine()
 	listenAddr := fmt.Sprintf("%s:%d", config.Config.ListenAddr, config.Config.ListenPort)

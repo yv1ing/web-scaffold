@@ -17,4 +17,7 @@ type User struct {
 	Email  string `json:"email"`
 	Phone  string `json:"phone"`
 	Avatar string `json:"avatar"`
+
+	JwtSign  string `json:"jwt_sign"`
+	IsActive bool   `json:"is_active"`
 }
