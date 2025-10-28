@@ -4,8 +4,7 @@ import (
 	"web-scaffold/internal/core/config"
 	"web-scaffold/pkg/encrypt"
 
-	systemmodel "web-scaffold/internal/model/system"
-	systemrepository "web-scaffold/internal/repository/system"
+	systemservice "web-scaffold/internal/service/system"
 )
 
 // @Author: yv1ing
@@ -14,15 +13,12 @@ import (
 // @Desc:	初始化系统用户
 
 func InitSystemUser() error {
-	user := &systemmodel.User{
-		Username: "yv1ing",
-		Password: encrypt.Sha256String("123456", config.Config.SecretKey),
-		Name:     "喻灵",
-		Email:    "me@yvling.cn",
-		Phone:    "13333333333",
-		Avatar:   "https://avatars.githubusercontent.com/u/191813682",
-		IsActive: true,
-	}
+	username := "yv1ing"
+	password := encrypt.Sha256String("123456", config.Config.SecretKey)
+	name := "喻灵"
+	email := "me@yvling.cn"
+	phone := "13333333333"
+	avatar := "https://avatars.githubusercontent.com/u/191813682"
 
-	return systemrepository.CreateUser(user)
+	return systemservice.CreateUser(username, password, name, email, phone, avatar)
 }

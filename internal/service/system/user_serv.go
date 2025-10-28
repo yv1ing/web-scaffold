@@ -19,6 +19,7 @@ func CreateUser(username, password, name, email, phone, avatar string) error {
 		Email:    email,
 		Phone:    phone,
 		Avatar:   avatar,
+		IsActive: true,
 	}
 
 	return systemrepository.CreateUser(user)
