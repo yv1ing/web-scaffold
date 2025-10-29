@@ -4,6 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"web-scaffold/internal/core/config"
+	"web-scaffold/pkg/auth"
+	"web-scaffold/pkg/encrypt"
 
 	systemmodel "web-scaffold/internal/model/system"
 	systemservice "web-scaffold/internal/service/system"
@@ -13,6 +16,101 @@ import (
 // @Email:  me@yvling.cn
 // @Date:   2025/10/28 15:09
 // @Desc:	系统用户接口实现
+
+// UserLoginHandler 系统用户登入
+func UserLoginHandler(ctx *gin.Context) {
+	type reqType struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	var req reqType
+	if err := ctx.ShouldBind(&req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, systemmodel.Response{
+			Code: http.StatusBadRequest,
+			Info: "请求参数非法",
+		})
+		return
+	}
+
+	user, err := systemservice.FindUserByUsername(req.Username)
+	if err != nil {
+		if err.Error() == "记录不存在" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, systemmodel.Response{
+				Code: http.StatusUnauthorized,
+				Info: "账号或密码错误",
+			})
+			return
+		} else {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, systemmodel.Response{
+				Code: http.StatusInternalServerError,
+				Info: "系统内部错误",
+			})
+			return
+		}
+	}
+
+	if user.Password != encrypt.Sha256String(req.Password, config.Config.SecretKey) {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, systemmodel.Response{
+			Code: http.StatusUnauthorized,
+			Info: "账号或密码错误",
+		})
+		return
+	}
+
+	jwtSign := encrypt.RandomString(32)
+	jwtToken, err := auth.CreateAccessToken(user.ID, user.Username, config.Config.SecretKey, jwtSign)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, systemmodel.Response{
+			Code: http.StatusInternalServerError,
+			Info: "系统内部错误",
+		})
+	}
+
+	user.JwtSign = jwtSign
+	err = systemservice.UpdateUser(user.ID, "", "", "", "", "", "", jwtSign)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, systemmodel.Response{
+			Code: http.StatusInternalServerError,
+			Info: "系统内部错误",
+		})
+	}
+
+	ctx.JSON(http.StatusOK, systemmodel.Response{
+		Code: http.StatusOK,
+		Info: "请求成功",
+		Data: gin.H{
+			"jwt_token": jwtToken,
+		},
+	})
+}
+
+// UserLogoutHandler 系统用户登出
+func UserLogoutHandler(ctx *gin.Context) {
+	userID := ctx.MustGet("user_id")
+	user, err := systemservice.FindUserByID(userID.(uint))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, systemmodel.Response{
+			Code: http.StatusInternalServerError,
+			Info: "系统内部错误",
+		})
+		return
+	}
+
+	err = systemservice.UpdateUser(user.ID, "", "", "", "", "", "", "-")
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, systemmodel.Response{
+			Code: http.StatusInternalServerError,
+			Info: "系统内部错误",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, systemmodel.Response{
+		Code: http.StatusOK,
+		Info: "请求成功",
+	})
+}
 
 // CreateUserHandler 创建系统用户
 func CreateUserHandler(ctx *gin.Context) {
@@ -121,7 +219,7 @@ func UpdateUserHandler(ctx *gin.Context) {
 		return
 	}
 
-	err = systemservice.UpdateUser(req.UserID, req.Username, req.Password, req.Name, req.Email, req.Phone, req.Avatar)
+	err = systemservice.UpdateUser(req.UserID, req.Username, req.Password, req.Name, req.Email, req.Phone, req.Avatar, "")
 	if err != nil {
 		if err.Error() == "记录不存在" {
 			ctx.AbortWithStatusJSON(http.StatusNotFound, systemmodel.Response{

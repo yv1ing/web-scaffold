@@ -46,21 +46,25 @@ func DeleteUser(userID uint) error {
 		return err
 	}
 
+	user.IsActive = false
+	user.JwtSign = "-"
+	err = systemrepository.UpdateUser(user)
+	if err != nil {
+		return err
+	}
+
 	return systemrepository.SoftDeleteUser(user)
 }
 
 // UpdateUser 更新用户
-func UpdateUser(userID uint, username, password, name, email, phone, avatar string) error {
+func UpdateUser(userID uint, username, password, name, email, phone, avatar, jwtSign string) error {
 	user, err := systemrepository.FindUserByID(userID)
 	if err != nil {
 		return err
 	}
 
 	if username != "" && username != user.Username {
-		existUser, err := systemrepository.FindUserByUsername(username)
-		if err != nil && err.Error() != "记录不存在" {
-			return err
-		}
+		existUser, _ := systemrepository.FindUserByUsername(username)
 		if existUser != nil {
 			return errors.New("用户名已被使用")
 		}
@@ -80,6 +84,9 @@ func UpdateUser(userID uint, username, password, name, email, phone, avatar stri
 	}
 	if avatar != "" {
 		user.Avatar = avatar
+	}
+	if jwtSign != "" {
+		user.JwtSign = jwtSign
 	}
 
 	return systemrepository.UpdateUser(user)
