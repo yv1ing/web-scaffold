@@ -40,7 +40,7 @@ func FindUserByID(userID uint) (*systemmodel.User, error) {
 	err := repository.Repo.DB.First(&user, userID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("record not found")
+			return nil, errors.New("记录不存在")
 		}
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func FindUserByUsername(username string) (*systemmodel.User, error) {
 	err := repository.Repo.DB.Where("username = ?", username).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("record not found")
+			return nil, errors.New("记录不存在")
 		}
 		return nil, err
 	}
@@ -76,12 +76,12 @@ func FindUserByName(name string) ([]systemmodel.User, error) {
 }
 
 // FindUserListWithPage 分页查询用户列表
-func FindUserListWithPage(page, pageSize int) ([]systemmodel.User, int64, error) {
+func FindUserListWithPage(page, size int) ([]systemmodel.User, int64, error) {
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 {
-		pageSize = 10
+	if size < 1 {
+		size = 10
 	}
 
 	var users []systemmodel.User
@@ -94,8 +94,8 @@ func FindUserListWithPage(page, pageSize int) ([]systemmodel.User, int64, error)
 		return nil, 0, err
 	}
 
-	offset := (page - 1) * pageSize
-	err = query.Offset(offset).Limit(pageSize).Find(&users).Error
+	offset := (page - 1) * size
+	err = query.Offset(offset).Limit(size).Find(&users).Error
 	if err != nil {
 		return nil, 0, err
 	}

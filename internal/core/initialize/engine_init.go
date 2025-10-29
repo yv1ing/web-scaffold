@@ -3,6 +3,7 @@ package initialize
 import (
 	"github.com/gin-gonic/gin"
 	"web-scaffold/internal/core/config"
+	"web-scaffold/internal/router"
 )
 
 // @Author: yv1ing
@@ -14,5 +15,7 @@ func InitWebEngine() *gin.Engine {
 	gin.SetMode(config.Config.Mode)
 
 	eng := gin.New()
+	router.InitRouter(eng)
+	
 	return eng
 }

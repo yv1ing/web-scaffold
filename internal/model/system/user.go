@@ -11,7 +11,7 @@ type User struct {
 	gorm.Model
 
 	Username string `json:"username" gorm:"index"`
-	Password string `json:"password"`
+	Password string `json:"-"`
 
 	Name   string `json:"name" gorm:"index"`
 	Email  string `json:"email"`

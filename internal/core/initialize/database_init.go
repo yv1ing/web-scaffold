@@ -6,6 +6,10 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"log"
+	"os"
+	"time"
 	"web-scaffold/internal/core/config"
 
 	systemmodel "web-scaffold/internal/model/system"
@@ -23,6 +27,17 @@ func InitDatabase() (*gorm.DB, error) {
 		err error
 	)
 
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,   // Slow SQL threshold
+			LogLevel:                  logger.Silent, // Log level
+			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,          // Don't include params in the SQL log
+			Colorful:                  false,         // Disable color
+		},
+	)
+
 	// 创建数据库连接
 	switch config.Config.Database.Type {
 	case "sqlite":
@@ -30,7 +45,9 @@ func InitDatabase() (*gorm.DB, error) {
 			"%s.db",
 			config.Config.Database.Name,
 		)
-		db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+		db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{
+			Logger: newLogger,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -44,13 +61,15 @@ func InitDatabase() (*gorm.DB, error) {
 			config.Config.Database.Port,
 			config.Config.Database.Name,
 		)
-		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+			Logger: newLogger,
+		})
 		if err != nil {
 			return nil, err
 		}
 		break
 	default:
-		return nil, errors.New("Illegal database type [" + config.Config.Database.Type + "]")
+		return nil, errors.New("数据库类型非法")
 	}
 
 	// 创建数据表

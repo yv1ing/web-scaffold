@@ -1,11 +1,6 @@
 package initialize
 
-import (
-	"web-scaffold/internal/core/config"
-	"web-scaffold/pkg/encrypt"
-
-	systemservice "web-scaffold/internal/service/system"
-)
+import systemservice "web-scaffold/internal/service/system"
 
 // @Author: yv1ing
 // @Email:  me@yvling.cn
@@ -14,7 +9,7 @@ import (
 
 func InitSystemUser() error {
 	username := "yv1ing"
-	password := encrypt.Sha256String("123456", config.Config.SecretKey)
+	password := "123456"
 	name := "喻灵"
 	email := "me@yvling.cn"
 	phone := "13333333333"

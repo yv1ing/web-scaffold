@@ -1,6 +1,10 @@
 package system
 
 import (
+	"errors"
+	"web-scaffold/internal/core/config"
+	"web-scaffold/pkg/encrypt"
+
 	systemmodel "web-scaffold/internal/model/system"
 	systemrepository "web-scaffold/internal/repository/system"
 )
@@ -12,7 +16,17 @@ import (
 
 // CreateUser 创建用户
 func CreateUser(username, password, name, email, phone, avatar string) error {
-	user := &systemmodel.User{
+	preUser, err := systemrepository.FindUserByUsername(username)
+	if err != nil && err.Error() != "记录不存在" {
+		return err
+	}
+	if preUser != nil {
+		return errors.New("用户名已经存在")
+	}
+
+	password = encrypt.Sha256String(password, config.Config.SecretKey)
+
+	newUser := &systemmodel.User{
 		Username: username,
 		Password: password,
 		Name:     name,
@@ -22,7 +36,7 @@ func CreateUser(username, password, name, email, phone, avatar string) error {
 		IsActive: true,
 	}
 
-	return systemrepository.CreateUser(user)
+	return systemrepository.CreateUser(newUser)
 }
 
 // DeleteUser 删除用户
@@ -42,11 +56,18 @@ func UpdateUser(userID uint, username, password, name, email, phone, avatar stri
 		return err
 	}
 
-	if username != "" {
+	if username != "" && username != user.Username {
+		existUser, err := systemrepository.FindUserByUsername(username)
+		if err != nil && err.Error() != "记录不存在" {
+			return err
+		}
+		if existUser != nil {
+			return errors.New("用户名已被使用")
+		}
 		user.Username = username
 	}
 	if password != "" {
-		user.Password = password
+		user.Password = encrypt.Sha256String(password, config.Config.SecretKey)
 	}
 	if name != "" {
 		user.Name = name
@@ -79,7 +100,7 @@ func FindUserByName(name string) ([]systemmodel.User, error) {
 	return systemrepository.FindUserByName(name)
 }
 
-// GetUserListWithPage 分页查询用户列表
-func GetUserListWithPage(page, pageSize int) ([]systemmodel.User, int64, error) {
-	return systemrepository.FindUserListWithPage(page, pageSize)
+// FindUserListWithPage 分页查询用户列表
+func FindUserListWithPage(page, size int) ([]systemmodel.User, int64, error) {
+	return systemrepository.FindUserListWithPage(page, size)
 }
