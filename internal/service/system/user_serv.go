@@ -3,7 +3,9 @@ package system
 import (
 	"errors"
 	"web-scaffold/internal/core/config"
+	"web-scaffold/internal/core/constant"
 	"web-scaffold/pkg/encrypt"
+	"web-scaffold/pkg/logger"
 
 	systemmodel "web-scaffold/internal/model/system"
 	systemrepository "web-scaffold/internal/repository/system"
@@ -17,15 +19,16 @@ import (
 // CreateUser 创建用户
 func CreateUser(username, password, name, email, phone, avatar string) error {
 	preUser, err := systemrepository.FindUserByUsername(username)
-	if err != nil && err.Error() != "记录不存在" {
+	if err != nil && err.Error() != "record not found" {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_FIND_DATA_ERROR, err.Error())
 		return err
 	}
+
 	if preUser != nil {
-		return errors.New("用户名已经存在")
+		return errors.New("username already exists")
 	}
 
 	password = encrypt.Sha256String(password, config.Config.SecretKey)
-
 	newUser := &systemmodel.User{
 		Username: username,
 		Password: password,
@@ -36,13 +39,20 @@ func CreateUser(username, password, name, email, phone, avatar string) error {
 		IsActive: true,
 	}
 
-	return systemrepository.CreateUser(newUser)
+	err = systemrepository.CreateUser(newUser)
+	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_CREATE_DATA_ERROR, err.Error())
+		return err
+	} else {
+		return nil
+	}
 }
 
 // DeleteUser 删除用户
 func DeleteUser(userID uint) error {
 	user, err := systemrepository.FindUserByID(userID)
 	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_FIND_DATA_ERROR, err.Error())
 		return err
 	}
 
@@ -50,23 +60,31 @@ func DeleteUser(userID uint) error {
 	user.JwtSign = "-"
 	err = systemrepository.UpdateUser(user)
 	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_UPDATE_DATA_ERROR, err.Error())
 		return err
 	}
 
-	return systemrepository.SoftDeleteUser(user)
+	err = systemrepository.SoftDeleteUser(user)
+	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_DELETE_DATA_ERROR, err.Error())
+		return err
+	} else {
+		return nil
+	}
 }
 
 // UpdateUser 更新用户
 func UpdateUser(userID uint, username, password, name, email, phone, avatar, jwtSign string) error {
 	user, err := systemrepository.FindUserByID(userID)
 	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_FIND_DATA_ERROR, err.Error())
 		return err
 	}
 
 	if username != "" && username != user.Username {
 		existUser, _ := systemrepository.FindUserByUsername(username)
 		if existUser != nil {
-			return errors.New("用户名已被使用")
+			return errors.New("username already exists")
 		}
 		user.Username = username
 	}
@@ -89,25 +107,55 @@ func UpdateUser(userID uint, username, password, name, email, phone, avatar, jwt
 		user.JwtSign = jwtSign
 	}
 
-	return systemrepository.UpdateUser(user)
+	err = systemrepository.UpdateUser(user)
+	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_UPDATE_DATA_ERROR, err.Error())
+		return err
+	} else {
+		return nil
+	}
 }
 
 // FindUserByID 根据ID查询用户
 func FindUserByID(userID uint) (*systemmodel.User, error) {
-	return systemrepository.FindUserByID(userID)
+	user, err := systemrepository.FindUserByID(userID)
+	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_FIND_DATA_ERROR, err.Error())
+		return nil, err
+	} else {
+		return user, nil
+	}
 }
 
 // FindUserByUsername 根据Username查询用户
 func FindUserByUsername(username string) (*systemmodel.User, error) {
-	return systemrepository.FindUserByUsername(username)
+	user, err := systemrepository.FindUserByUsername(username)
+	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_FIND_DATA_ERROR, err.Error())
+		return nil, err
+	} else {
+		return user, nil
+	}
 }
 
 // FindUserByName 根据Name查询用户
 func FindUserByName(name string) ([]systemmodel.User, error) {
-	return systemrepository.FindUserByName(name)
+	users, err := systemrepository.FindUserByName(name)
+	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_FIND_DATA_ERROR, err.Error())
+		return nil, err
+	} else {
+		return users, nil
+	}
 }
 
 // FindUserListWithPage 分页查询用户列表
 func FindUserListWithPage(page, size int) ([]systemmodel.User, int64, error) {
-	return systemrepository.FindUserListWithPage(page, size)
+	users, total, err := systemrepository.FindUserListWithPage(page, size)
+	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.SERVICE_FIND_DATA_ERROR, err.Error())
+		return nil, 0, err
+	} else {
+		return users, total, nil
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"web-scaffold/internal/core/config"
+	"web-scaffold/internal/core/constant"
 	"web-scaffold/pkg/auth"
 
 	systemmodel "web-scaffold/internal/model/system"
@@ -53,9 +54,9 @@ func JwtAuthMiddleware(whitelist []string) gin.HandlerFunc {
 
 		tokenStr := extractBearerToken(ctx)
 		if tokenStr == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, systemmodel.Response{
-				Code: http.StatusUnauthorized,
-				Info: "请求头不合法",
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, systemmodel.Response{
+				Code: constant.API_INVALID_REQUEST_HEADER,
+				Info: "invalid request header",
 			})
 			return
 		}
@@ -64,13 +65,13 @@ func JwtAuthMiddleware(whitelist []string) gin.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, systemmodel.Response{
-					Code: http.StatusUnauthorized,
-					Info: "Token已过期",
+					Code: constant.API_PERMISSION_DENIED,
+					Info: "token has expired",
 				})
 			} else {
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, systemmodel.Response{
-					Code: http.StatusUnauthorized,
-					Info: "Token不合法",
+					Code: constant.API_PERMISSION_DENIED,
+					Info: "token is not valid",
 				})
 			}
 			return
@@ -79,15 +80,15 @@ func JwtAuthMiddleware(whitelist []string) gin.HandlerFunc {
 		user, err := systemservice.FindUserByUsername(claims.Username)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, systemmodel.Response{
-				Code: http.StatusInternalServerError,
-				Info: "系统内部错误",
+				Code: constant.API_FIND_DATA_ERROR,
+				Info: "failed to find user",
 			})
 			return
 		}
 		if claims.JwtSign != user.JwtSign {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, systemmodel.Response{
-				Code: http.StatusUnauthorized,
-				Info: "Token已过期",
+				Code: constant.API_PERMISSION_DENIED,
+				Info: "token has expired",
 			})
 			return
 		}

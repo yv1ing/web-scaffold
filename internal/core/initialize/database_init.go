@@ -6,12 +6,13 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"log"
 	"os"
 	"time"
 	"web-scaffold/internal/core/config"
+	"web-scaffold/pkg/logger"
 
+	gormlogger "gorm.io/gorm/logger"
 	systemmodel "web-scaffold/internal/model/system"
 )
 
@@ -27,14 +28,14 @@ func InitDatabase() (*gorm.DB, error) {
 		err error
 	)
 
-	newLogger := logger.New(
+	newLogger := gormlogger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
-		logger.Config{
-			SlowThreshold:             time.Second,   // Slow SQL threshold
-			LogLevel:                  logger.Silent, // Log level
-			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      true,          // Don't include params in the SQL log
-			Colorful:                  false,         // Disable color
+		gormlogger.Config{
+			SlowThreshold:             time.Second,       // Slow SQL threshold
+			LogLevel:                  gormlogger.Silent, // Log level
+			IgnoreRecordNotFoundError: true,              // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,              // Don't include params in the SQL log
+			Colorful:                  false,             // Disable color
 		},
 	)
 
@@ -49,6 +50,7 @@ func InitDatabase() (*gorm.DB, error) {
 			Logger: newLogger,
 		})
 		if err != nil {
+			logger.Errorf("[%d] %s\n", constant.DATA_INIT_DATABASE_ERROR, err.Error())
 			return nil, err
 		}
 		break
@@ -65,11 +67,14 @@ func InitDatabase() (*gorm.DB, error) {
 			Logger: newLogger,
 		})
 		if err != nil {
+			logger.Errorf("[%d] %s\n", constant.DATA_INIT_DATABASE_ERROR, err.Error())
 			return nil, err
 		}
 		break
 	default:
-		return nil, errors.New("数据库类型非法")
+		err = errors.New(fmt.Sprintf("invalid database type <%s>", config.Config.Database.Type))
+		logger.Errorf("[%d] %s\n", constant.DATA_INIT_DATABASE_ERROR, err.Error())
+		return nil, err
 	}
 
 	// 创建数据表
@@ -85,6 +90,7 @@ func InitDatabase() (*gorm.DB, error) {
 func recreateTables(db *gorm.DB, models ...interface{}) error {
 	err := db.Migrator().DropTable(models...)
 	if err != nil {
+		logger.Errorf("[%d] %s\n", constant.DATA_INIT_DATABASE_ERROR, err.Error())
 		return err
 	}
 	return createTables(db, models...)

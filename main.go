@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"web-scaffold/internal/core"
+	"web-scaffold/internal/core/constant"
 	"web-scaffold/internal/core/initialize"
 	"web-scaffold/pkg/logger"
 )
@@ -18,7 +19,7 @@ func main() {
 	// 初始化系统全局配置
 	err = initialize.InitGlobalConfig("config.toml")
 	if err != nil {
-		log.Fatal("Startup failed, error loading configuration file: ", err)
+		log.Fatalf("[%d] %s\n", constant.CORE_INIT_CONF_ERROR, err.Error())
 	}
 
 	// 初始化系统全局日志

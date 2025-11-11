@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"web-scaffold/internal/core/config"
+	"web-scaffold/internal/core/constant"
 	"web-scaffold/internal/core/initialize"
 	"web-scaffold/internal/repository"
 	"web-scaffold/pkg/logger"
@@ -19,21 +20,21 @@ func Start() {
 	// 初始化数据库连接
 	db, err := initialize.InitDatabase()
 	if err != nil {
-		logger.Error("初始化数据库连接失败：", err)
+		logger.Errorf("[%d] %s\n] ", constant.DATA_INIT_DATABASE_ERROR, err.Error())
 		return
 	}
 
 	// 初始化数据仓储层
 	err = repository.InitRepository(db)
 	if err != nil {
-		logger.Error("初始化数据仓储层失败：", err)
+		logger.Errorf("[%d] %s\n] ", constant.DATA_INIT_REPOSITORY_ERROR, err.Error())
 		return
 	}
 
 	// 初始化系统用户
 	err = initialize.InitSystemUser()
 	if err != nil {
-		logger.Error("初始化系统用户失败：", err)
+		logger.Errorf("[%d] %s\n] ", constant.CORE_INIT_USER_ERROR, err.Error())
 		return
 	}
 
@@ -41,10 +42,10 @@ func Start() {
 	eng := initialize.InitWebEngine()
 	listenAddr := fmt.Sprintf("%s:%d", config.Config.ListenAddr, config.Config.ListenPort)
 
-	logger.Info("正在启动Web服务引擎，监听在 ", listenAddr)
+	logger.Info("web server listen at ", listenAddr)
 	err = eng.Run(listenAddr)
 	if err != nil {
-		logger.Error("启动Web服务引擎失败：", err)
+		logger.Errorf("[%d] %s\n] ", constant.CORE_INIT_ENGINE_ERROR, err.Error())
 		return
 	}
 }
