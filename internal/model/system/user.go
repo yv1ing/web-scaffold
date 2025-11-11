@@ -18,6 +18,7 @@ type User struct {
 	Phone  string `json:"phone"`
 	Avatar string `json:"avatar"`
 
+	Role     string `json:"role"`
 	JwtSign  string `json:"jwt_sign"`
 	IsActive bool   `json:"is_active"`
 }

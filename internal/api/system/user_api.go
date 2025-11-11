@@ -70,7 +70,7 @@ func UserLoginHandler(ctx *gin.Context) {
 	}
 
 	user.JwtSign = jwtSign
-	err = systemservice.UpdateUser(user.ID, "", "", "", "", "", "", jwtSign)
+	err = systemservice.UpdateUser(user.ID, "", "", "", "", "", "", "", jwtSign)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, systemmodel.Response{
 			Code: constant.API_UPDATE_DATA_ERROR,
@@ -100,7 +100,7 @@ func UserLogoutHandler(ctx *gin.Context) {
 		return
 	}
 
-	err = systemservice.UpdateUser(user.ID, "", "", "", "", "", "", "-")
+	err = systemservice.UpdateUser(user.ID, "", "", "", "", "", "", "", "-")
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, systemmodel.Response{
 			Code: constant.API_UPDATE_DATA_ERROR,
@@ -124,6 +124,7 @@ func CreateUserHandler(ctx *gin.Context) {
 		Email    string `json:"email"`
 		Phone    string `json:"phone"`
 		Avatar   string `json:"avatar"`
+		Role     string `json:"role"`
 	}
 
 	var (
@@ -139,7 +140,7 @@ func CreateUserHandler(ctx *gin.Context) {
 		return
 	}
 
-	err = systemservice.CreateUser(req.Username, req.Password, req.Name, req.Email, req.Phone, req.Avatar)
+	err = systemservice.CreateUser(req.Username, req.Password, req.Name, req.Email, req.Phone, req.Avatar, req.Role)
 	if err != nil {
 		if err.Error() == "username already exists" {
 			ctx.AbortWithStatusJSON(http.StatusBadRequest, systemmodel.Response{
@@ -206,6 +207,7 @@ func UpdateUserHandler(ctx *gin.Context) {
 		Email    string `json:"email"`
 		Phone    string `json:"phone"`
 		Avatar   string `json:"avatar"`
+		Role     string `json:"role"`
 	}
 
 	var (
@@ -222,7 +224,7 @@ func UpdateUserHandler(ctx *gin.Context) {
 		return
 	}
 
-	err = systemservice.UpdateUser(req.UserID, req.Username, req.Password, req.Name, req.Email, req.Phone, req.Avatar, "")
+	err = systemservice.UpdateUser(req.UserID, req.Username, req.Password, req.Name, req.Email, req.Phone, req.Avatar, req.Role, "")
 	if err != nil {
 		if err.Error() == "record not found" {
 			ctx.AbortWithStatusJSON(http.StatusNotFound, systemmodel.Response{

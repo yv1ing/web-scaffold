@@ -3,13 +3,14 @@ package initialize
 import (
 	"errors"
 	"fmt"
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"log"
 	"os"
 	"time"
 	"web-scaffold/internal/core/config"
+	"web-scaffold/internal/core/constant"
 	"web-scaffold/pkg/logger"
 
 	gormlogger "gorm.io/gorm/logger"

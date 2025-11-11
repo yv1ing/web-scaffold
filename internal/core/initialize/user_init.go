@@ -13,7 +13,8 @@ func InitSystemUser() error {
 	name := "喻灵"
 	email := "me@yvling.cn"
 	phone := "13333333333"
-	avatar := "https://avatars.githubusercontent.com/u/191813682"
+	avatar := "https://avatars.githubusercontent.com/u/46731322"
+	role := "admin"
 
-	return systemservice.CreateUser(username, password, name, email, phone, avatar)
+	return systemservice.CreateUser(username, password, name, email, phone, avatar, role)
 }

@@ -17,7 +17,7 @@ import (
 // @Desc:	系统用户服务实现
 
 // CreateUser 创建用户
-func CreateUser(username, password, name, email, phone, avatar string) error {
+func CreateUser(username, password, name, email, phone, avatar, role string) error {
 	preUser, err := systemrepository.FindUserByUsername(username)
 	if err != nil && err.Error() != "record not found" {
 		logger.Errorf("[%d] %s\n", constant.SERVICE_FIND_DATA_ERROR, err.Error())
@@ -36,6 +36,7 @@ func CreateUser(username, password, name, email, phone, avatar string) error {
 		Email:    email,
 		Phone:    phone,
 		Avatar:   avatar,
+		Role:     role,
 		IsActive: true,
 	}
 
@@ -74,7 +75,7 @@ func DeleteUser(userID uint) error {
 }
 
 // UpdateUser 更新用户
-func UpdateUser(userID uint, username, password, name, email, phone, avatar, jwtSign string) error {
+func UpdateUser(userID uint, username, password, name, email, phone, avatar, role, jwtSign string) error {
 	user, err := systemrepository.FindUserByID(userID)
 	if err != nil {
 		logger.Errorf("[%d] %s\n", constant.SERVICE_FIND_DATA_ERROR, err.Error())
@@ -102,6 +103,9 @@ func UpdateUser(userID uint, username, password, name, email, phone, avatar, jwt
 	}
 	if avatar != "" {
 		user.Avatar = avatar
+	}
+	if role != "" {
+		user.Role = role
 	}
 	if jwtSign != "" {
 		user.JwtSign = jwtSign
